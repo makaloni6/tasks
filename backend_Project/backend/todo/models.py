@@ -7,23 +7,20 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     due_date = models.DateTimeField()
-    estimated_time = models.DurationField()  # 予想作業時間
-    actual_time = models.DurationField(null=True, blank=True)  # 実際の作業時間
-    slack_time = models.DurationField()  # だらけ可能時間
+    estimated_time = models.DurationField()  
+    actual_time = models.DurationField(null=True, blank=True)  
+    slack_time = models.DurationField()  
     is_completed = models.BooleanField(default=False)
     
     def __str__(self):
         return self.title
-
-    # class Meta:
-    #     ordering = ('-pub_date',)
 
 class TaskLog(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     duration = models.DurationField()
-    is_slacking = models.BooleanField(default=False)  # だらけ時間かどうか
+    is_slacking = models.BooleanField(default=False)  
 
     def __str__(self):
         return f"{self.task.title} - {self.start_time}"

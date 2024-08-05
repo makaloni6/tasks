@@ -1,56 +1,43 @@
-from django.shortcuts import render
-from django.contrib.auth.models import User
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
-from django.core.serializers import serialize
-from .serializers import TaskSerializer
+from .serializers import TaskSerializer, TaskLogSerializer
 from rest_framework import viewsets
-from django.forms.models import model_to_dict
+from .models import Task, TaskLog
 
-from .forms import  TodoForm
-from .models import Task
-import json
-
-from django.views.generic import TemplateView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 class TaskView(viewsets.ModelViewSet):
-    # Create your views here.
-    page_max = 10
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
 
-    @login_required(login_url='/admin/login/')
-    def index(request):
-        print('index')
-        queryset = Task.objects.all()
+class TaskLogView(viewsets.ModelViewSet):
+    queryset = TaskLog.objects.all()
+    serializer_class = TaskLogSerializer
 
-        return render(request, 'index.html', queryset)
 
-    #taskの取得
-    @login_required(login_url='/admin/login/')
-    def task(request, page=1):
-        print('task')
-        serializer_class = TaskSerializer
-        tasks = Task.objects.all()
-        serialized_data = serialize('json', tasks)
-        return HttpResponse(serialized_data, content_type='application/json')
+# @api_view(['POST'])
+# def login_view(request):
+#     username = request.data.get('username')
+#     password = request.data.get('password')
+#     user = authenticate(username=username, password=password)
+#     if user is not None:
+#         # ユーザーが存在する場合の処理
+#         return Response({'message': 'Login successful'})
+#     else:
+#         # ユーザーが存在しない場合の処理
+#         return Response({'message': 'Invalid credentials'}, status=400)
+    
+class LoginView(APIView):
 
-    #taskのポスト処理
-    @login_required(login_url='/admin/login/')
-    def task_post(request):
-        if request.method == 'POST':
-            byte_data = request.body.decode('utf-8')
-            json_body = json.loads(byte_data)
-
-            task = Task()
-            task.title = json_body['title']
-            task.description = json_body['description']
-            task.due_date = json_body['due_date']
-            task.actual_time = json_body['actual_time']
-            task.is_completed = json_body['is_completed']
-
-            task.save()
-            return HttpResponse('ok')
-        
-        else:
-            return HttpResponse('ng')
-        
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            # refresh = RefreshToken.for_user(user)
+            return Response({
+                {'message': 'Login successful'}
+            })
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
